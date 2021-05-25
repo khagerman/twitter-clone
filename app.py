@@ -309,11 +309,19 @@ def homepage():
     """Show homepage:
 
     - anon users: no messages
-    - logged in: 100 most recent messages of followed_users
+    - logged in: 100 most recent messages of followed_users/yourself
     """
 
     if g.user:
-        messages = Message.query.order_by(Message.timestamp.desc()).limit(100).all()
+        follower_ids = [follower.id for follower in g.user.following]
+        messages = (
+            Message.query.filter(
+                (Message.user_id.in_(follower_ids)) | (Message.user_id == g.user.id)
+            )
+            .order_by(Message.timestamp.desc())
+            .limit(100)
+            .all()
+        )
 
         return render_template("home.html", messages=messages)
 
