@@ -217,6 +217,7 @@ def profile():
         return redirect("/")
     user = g.user
     form = EditUserForm(obj=user)
+
     if form.validate_on_submit():
         if User.authenticate(user.username, form.password.data):
             user.username = form.username.data
@@ -248,6 +249,36 @@ def delete_user():
     db.session.commit()
 
     return redirect("/signup")
+
+
+##############################################################################
+# Likes route
+
+
+@app.route("/users/add_like/<msg_id>", methods=["POST"])
+def handle_like(msg_id):
+    """Add or remove like"""
+    # if first click add to db, if second click remove
+    # can't like if its your own (no option)-completed in html
+    message_liked = Message.query.get_or_404(msg_id)
+    user_likes = [m.id for m in g.user.likes]
+    if message_liked.id not in user_likes:
+        g.user.likes.append(message_liked)
+        db.session.commit()
+        return redirect("/")
+    else:
+        g.user.likes.remove(message_liked)
+        db.session.commit()
+        return redirect("/")
+
+
+#
+@app.route("/users/<id>/likes")
+def view_likes(id):
+    """view users likes"""
+
+    user = User.query.get_or_404(id)
+    return render_template("users/likes.html", user=user)
 
 
 ##############################################################################
@@ -314,6 +345,7 @@ def homepage():
 
     if g.user:
         follower_ids = [follower.id for follower in g.user.following]
+        likes = [like.id for like in g.user.likes]
         messages = (
             Message.query.filter(
                 (Message.user_id.in_(follower_ids)) | (Message.user_id == g.user.id)
@@ -323,7 +355,7 @@ def homepage():
             .all()
         )
 
-        return render_template("home.html", messages=messages)
+        return render_template("home.html", messages=messages, likes=likes)
 
     else:
         return render_template("home-anon.html")
