@@ -108,13 +108,13 @@ class UserViewTestCase(TestCase):
 
             self.assertIn("@testuser2", html)
 
-    # def test_remove_followers(self):
-    #     """can a logged in user add and remove followers?"""
+    def test_remove_followers(self):
+        """can a logged in user add and remove followers?"""
 
-    #     with self.client as c:
-    #         with c.session_transaction() as sess:
-    #             sess[CURR_USER_KEY] = 1
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.uid1
 
-    #         resp = c.post("/users/follow/2", follow_redirects=True)
-    #         html = resp.get_data(as_text=True)
-    #         self.assertIn("testuser2", html)
+            resp = c.post("/users/follow/2", follow_redirects=True)
+            html = resp.get_data(as_text=True)
+            self.assertIn("@testuser2", html)
