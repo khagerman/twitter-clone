@@ -29,18 +29,23 @@ class MessageModelTestCase(TestCase):
 
     def setUp(self):
         """Create test client, add sample data."""
+        db.drop_all()
+        db.create_all()
 
         User.query.delete()
         Message.query.delete()
         Follows.query.delete()
-        u1 = User.signup("testuser1", "test1@test.com", "HASHED_PASSWORD1", None)
-        uid1 = 1
-        u1.id = uid1
-
-        self.u1 = u1
-        self.uid1 = uid1
 
         self.client = app.test_client()
+
+        self.client = app.test_client()
+        self.u1 = User.signup("testuser1", "test1@test.com", "HASHED_PASSWORD1", None)
+        self.uid1 = 1
+        self.u1.id = self.uid1
+        self.u2 = User.signup("testuser2", "test2@test.com", "HASHED_PASSWORD", None)
+        self.uid2 = 2
+        self.u2.id = self.uid2
+        db.session.commit()
 
     def tearDown(self):
         res = super().tearDown()
@@ -57,3 +62,23 @@ class MessageModelTestCase(TestCase):
 
         self.assertEqual(len(self.u1.messages), 1)
         self.assertEqual(self.u1.messages[0].text, "Hey everyone")
+
+    def test_message_likes(self):
+        "Can a user like another user's post?"
+        m1 = Message(text="hdshdjhfhjx hdjsddj?", user_id=self.uid1)
+
+        m2 = Message(text="I can't think of something funny", user_id=self.uid1)
+        db.session.add_all(
+            [
+                m1,
+                m2,
+            ]
+        )
+        db.session.commit()
+
+        self.u1.likes.append(m1)
+
+        db.session.commit()
+
+        user1_likes = Likes.query.filter(Likes.user_id == self.uid1).all()
+        self.assertEqual(len(user1_likes), 1)

@@ -45,20 +45,20 @@ class UserViewTestCase(TestCase):
         User.query.delete()
         Message.query.delete()
         Follows.query.delete()
-        u1 = User.signup("testuser1", "test1@test.com", "HASHED_PASSWORD1", None)
-        uid1 = 1
-        u1.id = uid1
-        u2 = User.signup("testuser2", "test2@test.com", "HASHED_PASSWORD", None)
-        uid2 = 2
-        u2.id = uid2
-
-        self.u1 = u1
-        self.uid1 = uid1
-
-        self.u2 = u2
-        self.uid2 = uid2
 
         self.client = app.test_client()
+        self.u1 = User.signup("testuser1", "test1@test.com", "HASHED_PASSWORD1", None)
+        self.uid1 = 1
+        self.u1.id = self.uid1
+        self.u2 = User.signup("testuser2", "test2@test.com", "HASHED_PASSWORD", None)
+        self.uid2 = 2
+        self.u2.id = self.uid2
+        db.session.commit()
+        # self.u1 = u1
+        # self.uid1 = uid1
+
+        # self.u2 = u2
+        # self.uid2 = uid2
 
     def tearDown(self):
         resp = super().tearDown()
@@ -118,3 +118,8 @@ class UserViewTestCase(TestCase):
             resp = c.post("/users/follow/2", follow_redirects=True)
             html = resp.get_data(as_text=True)
             self.assertIn("@testuser2", html)
+
+            resp = c.post("/users/stop-following/2", follow_redirects=True)
+            html = resp.get_data(as_text=True)
+            html = resp.get_data(as_text=True)
+            self.assertNotIn("@testuser2", html)
