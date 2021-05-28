@@ -93,17 +93,28 @@ class UserViewTestCase(TestCase):
         self.u1.following.append(self.u2)
         db.session.commit()
 
-        resp = self.client.get(f"/users/{self.u1.id}/following", follow_redirects=True)
+        resp = self.client.get(f"/users/{self.uid1}/following", follow_redirects=True)
         html = resp.get_data(as_text=True)
         self.assertEqual(resp.status_code, 200)
         self.assertIn("Access unauthorized", html)
 
         with self.client as c:
             with c.session_transaction() as sess:
-                sess[CURR_USER_KEY] = self.u1.id
+                sess[CURR_USER_KEY] = self.uid1
 
-            resp = c.get(f"/users/{self.u1.id}/following", follow_redirects=True)
+            resp = c.get(f"/users/{self.uid1}/following", follow_redirects=True)
             html = resp.get_data(as_text=True)
             self.assertEqual(resp.status_code, 200)
 
             self.assertIn("@testuser2", html)
+
+    # def test_remove_followers(self):
+    #     """can a logged in user add and remove followers?"""
+
+    #     with self.client as c:
+    #         with c.session_transaction() as sess:
+    #             sess[CURR_USER_KEY] = 1
+
+    #         resp = c.post("/users/follow/2", follow_redirects=True)
+    #         html = resp.get_data(as_text=True)
+    #         self.assertIn("testuser2", html)
